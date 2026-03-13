@@ -48,7 +48,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- Load & clean data ---
-CSV_URL = "https://gist.githubusercontent.com/helenluchan/0d0370b7bfa754c809d75217739f8842/raw/helen%2520spend%2520data_30%2520days_march%252012"
+CSV_URL = "https://gist.githubusercontent.com/helenluchan/0d0370b7bfa754c809d75217739f8842/raw/bc1718a558f36e18f8f0175d21ba59518b8f5010/helen%2520spend%2520data_30%2520days_march%252012"
 df = pd.read_csv(CSV_URL, sep="\t")
 df.columns = df.columns.str.strip()
 df["Transaction Date"] = pd.to_datetime(df["Transaction Date"])
