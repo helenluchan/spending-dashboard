@@ -40,10 +40,12 @@ st.markdown("""
     .stTable tr:hover td { background-color: #222222 !important; }
     table.custom-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
     table.custom-table th { color: #6b7280; padding: 6px 12px; text-align: left; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #2a2a2a; font-weight: 500; }
-    table.custom-table td { color: #d1d5db; padding: 8px 12px; border-bottom: 1px solid #1f1f1f; }
+    table.custom-table td { color: #ffffff; padding: 8px 12px; border-bottom: 1px solid #1f1f1f; }
     table.custom-table tr:last-child td { border-bottom: none; }
     table.custom-table tr:hover td { background-color: #1a1a1a; }
-    [data-testid="stExpander"] summary:hover span { color: #00d37f !important; }
+    [data-testid="stExpander"] summary p { color: #ffffff !important; }
+    [data-testid="stExpander"] summary:hover p { color: #00d37f !important; }
+    [data-testid="stExpander"] summary span { color: transparent !important; font-size: 0 !important; }
 </style>
 """, unsafe_allow_html=True)
 
