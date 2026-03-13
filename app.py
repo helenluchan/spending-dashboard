@@ -38,7 +38,8 @@ st.markdown("""
     .stTable th { background-color: #222222 !important; color: #9ca3af !important; font-size: 0.75rem !important; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #2a2a2a !important; font-weight: 500 !important; }
     .stTable td { color: #e5e7eb !important; border-bottom: 1px solid #1f1f1f !important; font-size: 0.95rem !important; }
     .stTable tr:hover td { background-color: #222222 !important; }
-    [data-testid="stExpander"] summary { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 8px; }
+    [data-testid="stExpander"] summary { flex-direction: row-reverse; justify-content: flex-end; gap: 8px; }
+    [data-testid="stExpander"] summary svg { flex-shrink: 0; }
     table.custom-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
     table.custom-table th { color: #6b7280; padding: 6px 12px; text-align: left; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #2a2a2a; font-weight: 500; }
     table.custom-table td { color: #d1d5db; padding: 8px 12px; border-bottom: 1px solid #1f1f1f; }
