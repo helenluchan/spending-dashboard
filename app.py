@@ -38,13 +38,12 @@ st.markdown("""
     .stTable th { background-color: #222222 !important; color: #9ca3af !important; font-size: 0.75rem !important; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #2a2a2a !important; font-weight: 500 !important; }
     .stTable td { color: #e5e7eb !important; border-bottom: 1px solid #1f1f1f !important; font-size: 0.95rem !important; }
     .stTable tr:hover td { background-color: #222222 !important; }
-    [data-testid="stExpander"] summary { flex-direction: row-reverse; justify-content: flex-end; gap: 8px; }
-    [data-testid="stExpander"] summary svg { flex-shrink: 0; }
     table.custom-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
     table.custom-table th { color: #6b7280; padding: 6px 12px; text-align: left; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #2a2a2a; font-weight: 500; }
     table.custom-table td { color: #d1d5db; padding: 8px 12px; border-bottom: 1px solid #1f1f1f; }
     table.custom-table tr:last-child td { border-bottom: none; }
     table.custom-table tr:hover td { background-color: #1a1a1a; }
+    [data-testid="stExpander"] summary:hover span { color: #00d37f !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -61,6 +60,7 @@ df["Amount"] = df["Amount"].abs()
 # Recategorize subscriptions
 df.loc[df["Description"].str.contains("OPENAI|YouTubePremium", case=False, na=False), "Category"] = "Subscriptions"
 df.loc[df["Category"] == "Groceries", "Category"] = "Food & Drink"
+df.loc[df["Description"].str.contains("DELI", case=False, na=False), "Category"] = "Food & Drink"
 
 df["Month"] = df["Transaction Date"].dt.to_period("M").astype(str)
 
@@ -102,6 +102,7 @@ col_left, col_right = st.columns(2)
 
 # Daily spend line
 ANNOTATIONS = {
+    "2026-02-15": "Landed at JFK. Got a donut immediately.",
     "2026-02-18": "Celebrated CNY with family. Grandma wanted pizza and Popeyes.",
     "2026-03-10": "Stayed inside to apply to jobs. Just got a coffee.",
     "2026-03-01": "Travel day. Booked a shuttle. And my gym charged me too.",
@@ -224,3 +225,4 @@ st.markdown("""
   Vibe-coded with <strong style='color:#d1d5db;'>Claude</strong>. Design, debugging, and way too many food purchases — all mine.
 </p>
 """, unsafe_allow_html=True)
+st.markdown("<p style='color:#6b7280; font-size:0.8rem;'>Not optimized for mobile (yet). Check me out on a desktop.</p>", unsafe_allow_html=True)
