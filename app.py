@@ -27,6 +27,10 @@ st.markdown("""
     }
     [data-testid="stMetricLabel"] p { color: #9ca3af !important; font-size: 0.7rem !important; font-weight: 500 !important; text-transform: uppercase; letter-spacing: 0.5px; }
     [data-testid="stMetricValue"] { color: #ffffff !important; font-size: 1.2rem !important; font-weight: 700 !important; }
+    [data-testid="stSelectbox"] label { color: #ffffff !important; font-size: 0.75rem !important; }
+    [data-testid="stSelectbox"] div[data-baseweb="select"] { font-size: 0.8rem !important; }
+    [data-testid="stSelectbox"] div[data-baseweb="select"] > div { min-height: 32px !important; padding: 2px 8px !important; background-color: #1a1a1a !important; border-color: #2a2a2a !important; color: #ffffff !important; }
+    [data-testid="stSelectbox"] div[data-baseweb="select"] span { color: #ffffff !important; }
 
     hr { border-color: #2a2a2a !important; margin: 1.5rem 0 !important; }
 
@@ -44,7 +48,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- Load & clean data ---
-CSV_URL = "https://gist.githubusercontent.com/helenluchan/42bcc74818834b2e4117501430615837/raw/helen%2520spend%2520data_30%2520days_march%252012"
+CSV_URL = "https://gist.githubusercontent.com/helenluchan/0d0370b7bfa754c809d75217739f8842/raw/helen%2520spend%2520data_30%2520days_march%252012"
 df = pd.read_csv(CSV_URL, sep="\t")
 df.columns = df.columns.str.strip()
 df["Transaction Date"] = pd.to_datetime(df["Transaction Date"])
@@ -54,7 +58,8 @@ df["Amount"] = df["Amount"].abs()
 
 
 # Recategorize subscriptions
-df.loc[df["Description"].isin(["OpenAI", "YouTube Premium"]), "Category"] = "Subscriptions"
+df.loc[df["Description"].str.contains("OPENAI|YouTubePremium", case=False, na=False), "Category"] = "Subscriptions"
+df.loc[df["Category"] == "Groceries", "Category"] = "Food & Drink"
 
 df["Month"] = df["Transaction Date"].dt.to_period("M").astype(str)
 
@@ -70,8 +75,10 @@ CHART_LAYOUT = dict(
 )
 
 # --- Header ---
-start_date = df["Transaction Date"].min().strftime("%b %d, %Y")
-end_date = df["Transaction Date"].max().strftime("%b %d, %Y")
+end_date = df["Transaction Date"].max()
+end_dt = end_date
+start_date = (end_dt - pd.Timedelta(days=29)).strftime("%b %-d")
+end_date = end_dt.strftime("%b %-d, %Y")
 st.title("Helen's Spend Dashboard")
 st.markdown(f"<p style='color:#9ca3af; font-size:0.95rem; margin-top:-12px;'>{start_date} — {end_date}</p>", unsafe_allow_html=True)
 
@@ -96,6 +103,8 @@ col_left, col_right = st.columns(2)
 ANNOTATIONS = {
     "2026-02-18": "Celebrated CNY with family. Grandma wanted pizza and Popeyes.",
     "2026-03-10": "Stayed inside to apply to jobs. Just got a coffee.",
+    "2026-03-01": "Travel day. Booked a shuttle. And my gym charged me too.",
+    "2026-03-11": "Bought Claude AI subscription.",
 }
 daily = df.groupby("Transaction Date")["Amount"].sum().reset_index()
 daily["Note"] = daily["Transaction Date"].dt.strftime("%Y-%m-%d").map(ANNOTATIONS).fillna("")
@@ -126,9 +135,12 @@ if selected and selected.get("selection", {}).get("points"):
     day_df = day_df.reset_index(drop=True)
     day_df.index += 1
     col_left.markdown(f"**Transactions on {clicked_date}**")
-    col_left.table(day_df)
+    col_left.markdown(day_df.to_html(classes="custom-table", border=0), unsafe_allow_html=True)
 
 # Category pie
+tx_counts = df.groupby("Category").size().reset_index(name="Count")
+by_cat = by_cat.merge(tx_counts, on="Category", how="left")
+
 fig_pie = px.pie(
     by_cat, names="Category", values="Amount",
     title="Category Spend", hole=0.55,
@@ -137,7 +149,8 @@ fig_pie = px.pie(
 fig_pie.update_traces(
     textfont=dict(color="#ffffff", size=12),
     marker=dict(line=dict(color="#1a1a1a", width=2)),
-    hovertemplate="<b>%{label}</b><br>$%{value:,.2f}<extra></extra>",
+    customdata=by_cat[["Count"]].values,
+    hovertemplate="<b>%{label}</b><br>$%{value:,.2f}<br>%{customdata[0]} transactions<extra></extra>",
 )
 fig_pie.update_layout(**CHART_LAYOUT)
 col_right.plotly_chart(fig_pie, use_container_width=True)
@@ -145,7 +158,7 @@ col_right.plotly_chart(fig_pie, use_container_width=True)
 st.divider()
 
 # --- Fun facts ---
-mta_rides = len(df[df["Description"] == "MTA"])
+mta_rides = len(df[df["Description"].str.contains("MTA", case=False, na=False)])
 path_rides = len(df[df["Description"] == "PATH"])
 
 all_dates = pd.date_range(df["Transaction Date"].min(), df["Transaction Date"].max())
@@ -163,7 +176,7 @@ biggest = df.loc[df["Amount"].idxmax()]
 st.subheader("✨ Fun Facts")
 ff1, ff2, ff3 = st.columns(3)
 ff1.metric("🚇 MTA Rides", mta_rides)
-ff2.metric("🧘 No-Spend Streak", f"{no_spend_streak} days")
+ff2.metric("🧘🏽 No-Spend Streak", f"{no_spend_streak} days")
 ff3.metric("💥 Biggest Splurge", f"{biggest['Description']} · ${biggest['Amount']:,.2f} · {biggest['Transaction Date'].strftime('%b %d')}")
 
 st.divider()
@@ -178,13 +191,35 @@ top10 = top10.rename(columns={"Description": "Merchant"})
 render_table(top10)
 
 # --- All transactions ---
-st.subheader("All Transactions")
-all_tx = df[["Transaction Date", "Description", "Category", "Amount"]].sort_values("Transaction Date", ascending=False).reset_index(drop=True)
-all_tx["Transaction Date"] = all_tx["Transaction Date"].dt.strftime("%b %d, %Y")
-all_tx["Amount"] = all_tx["Amount"].map("${:,.2f}".format)
-all_tx.index += 1
-all_tx = all_tx.rename(columns={"Description": "Merchant"})
-render_table(all_tx)
+categories = ["All"] + sorted(df["Category"].dropna().unique().tolist())
+
+with st.expander("All Transactions", expanded=False):
+    selected_cat = st.selectbox("Filter by Category", categories)
+
+    all_tx = df[["Transaction Date", "Description", "Category", "Amount"]].sort_values("Transaction Date", ascending=False).copy()
+    if selected_cat != "All":
+        all_tx = all_tx[all_tx["Category"] == selected_cat]
+    filtered_total = all_tx["Amount"].sum()
+
+    all_tx = all_tx.reset_index(drop=True)
+    all_tx["Transaction Date"] = all_tx["Transaction Date"].dt.strftime("%b %-d, %Y")
+    all_tx["Amount"] = all_tx["Amount"].map("${:,.2f}".format)
+    all_tx = all_tx.rename(columns={"Description": "Merchant"})
+    all_tx.index += 1
+    render_table(all_tx)
+    st.markdown(f"<p style='text-align:right; color:#00d37f; font-weight:600; font-size:0.9rem; margin-top:4px;'>Total: ${filtered_total:,.2f}</p>", unsafe_allow_html=True)
 
 st.divider()
 st.markdown("👀 Want to see more? I take suggestions at [linkedin.com/in/helenluchan](https://www.linkedin.com/in/helenluchan/)", unsafe_allow_html=True)
+
+st.divider()
+st.markdown("""
+<p style='color:#6b7280; font-size:0.8rem; line-height:1.7;'>
+  <span style='color:#ffffff; font-weight:600;'>How I built this</span><br>
+  Built with <strong style='color:#d1d5db;'>Python</strong> and <strong style='color:#d1d5db;'>Streamlit</strong> for the web framework,
+  <strong style='color:#d1d5db;'>pandas</strong> for data processing, and <strong style='color:#d1d5db;'>Plotly</strong> for interactive charts.
+  Transaction data is exported from my recent credit card statement and hosted as a CSV on a secret <strong style='color:#d1d5db;'>GitHub Gist</strong> —
+  the dashboard fetches it live on every load. Deployed on <strong style='color:#d1d5db;'>Streamlit Community Cloud</strong>.
+  Vibe-coded with <strong style='color:#d1d5db;'>Claude</strong>. Design, debugging, and way too many food purchases — all mine.
+</p>
+""", unsafe_allow_html=True)
