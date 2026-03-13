@@ -43,6 +43,7 @@ st.markdown("""
     table.custom-table td { color: #ffffff; padding: 8px 12px; border-bottom: 1px solid #1f1f1f; }
     table.custom-table tr:last-child td { border-bottom: none; }
     table.custom-table tr:hover td { background-color: #1a1a1a; }
+    [data-testid="stExpander"] { background-color: #1a1a1a !important; border: 1px solid #2a2a2a !important; border-radius: 8px !important; }
     [data-testid="stExpander"] summary p { color: #ffffff !important; }
     [data-testid="stExpander"] summary:hover p { color: #00d37f !important; }
     [data-testid="stExpander"] summary span { color: transparent !important; font-size: 0 !important; }
@@ -188,10 +189,10 @@ st.divider()
 # --- Top 10 transactions ---
 st.subheader("Top 10 Transactions $$$")
 top10 = df.nlargest(10, "Amount")[["Transaction Date", "Description", "Category", "Amount"]].reset_index(drop=True)
-top10["Transaction Date"] = top10["Transaction Date"].dt.strftime("%b %d, %Y")
+top10["Transaction Date"] = top10["Transaction Date"].dt.strftime("%b %-d, %Y")
 top10["Amount"] = top10["Amount"].map("${:,.2f}".format)
 top10.index += 1
-top10 = top10.rename(columns={"Description": "Merchant"})
+top10 = top10.rename(columns={"Description": "Merchant", "Transaction Date": "Date"})
 render_table(top10)
 
 # --- All transactions ---
@@ -208,7 +209,7 @@ with st.expander("All Transactions", expanded=False):
     all_tx = all_tx.reset_index(drop=True)
     all_tx["Transaction Date"] = all_tx["Transaction Date"].dt.strftime("%b %-d, %Y")
     all_tx["Amount"] = all_tx["Amount"].map("${:,.2f}".format)
-    all_tx = all_tx.rename(columns={"Description": "Merchant"})
+    all_tx = all_tx.rename(columns={"Description": "Merchant", "Transaction Date": "Date"})
     all_tx.index += 1
     render_table(all_tx)
     st.markdown(f"<p style='text-align:right; color:#00d37f; font-weight:600; font-size:0.9rem; margin-top:4px;'>Total: ${filtered_total:,.2f}</p>", unsafe_allow_html=True)
