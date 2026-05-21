@@ -177,12 +177,14 @@ for d in all_dates:
         current_streak = 0
 
 biggest = df.loc[df["Amount"].idxmax()]
+most_exp_day = df.groupby(df["Transaction Date"].dt.day_name())["Amount"].sum().idxmax()
 
 st.subheader("✨ Fun Facts")
-ff1, ff2, ff3 = st.columns(3)
+ff1, ff2, ff3, ff4 = st.columns(4)
 ff1.metric("🚇 MTA Rides", mta_rides)
 ff2.metric("🧘🏽 No-Spend Streak", f"{no_spend_streak} days")
 ff3.metric("💥 Biggest Splurge", f"{biggest['Description']} · ${biggest['Amount']:,.2f} · {biggest['Transaction Date'].strftime('%b %d')}")
+ff4.metric("📅 Priciest Day", most_exp_day)
 
 st.divider()
 
